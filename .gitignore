@@ -1,0 +1,10 @@
+data/preprocessed/**
+data/raw/SROIE/**
+data/raw/CUSTOM/**
+logs/**
+predictions/**
+src/model_checkpoints/**
+*.log
+*.pdf
+*.txt
+*.np
