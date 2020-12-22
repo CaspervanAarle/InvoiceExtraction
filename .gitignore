@@ -1,4 +1,5 @@
 data/preprocessed/**
+!data/preprocessed/.gitkeep
 data/raw/SROIE/**
 data/raw/CUSTOM/**
 logs/**
@@ -8,3 +9,7 @@ src/model_checkpoints/**
 *.pdf
 *.txt
 *.np
+
+!data/raw/SROIE
+!data/raw/CUSTOM
+!data/preprocessed
