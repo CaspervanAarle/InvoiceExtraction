@@ -16,7 +16,7 @@ Data from the CUSTOM dataset is available upon request for research purposes onl
 
 
 ## Usage
-The preprocess.py, train.py, and predict.py are files that can be executed
+The ```preprocess.py```, ```train.py```, and ```predict.py``` are files that can be executed
 
 ### preprocess
 Before training can commence, the data must be preprocessed:
@@ -65,7 +65,7 @@ A single prediction can also be made:
 
 
 ## Contributing
-Not meant to contribute
+Not meant to contribute.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
