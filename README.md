@@ -1,5 +1,5 @@
 # InvoiceExtraction
-code to extract SROIE invoice field data and custom dataset fields. The code is specifically made for research purposes and is not generalizable to more dataset other than the ones that are mentioned here.
+Code to extract SROIE invoice field data and custom dataset fields. The code is specifically made for research purposes and is not generalizable to more dataset other than the ones that are mentioned here.
 
 ## Installation
 
