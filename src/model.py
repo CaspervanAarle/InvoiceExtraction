@@ -10,6 +10,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_addons as tfa
 
+
+
 def create_model_Cutie(output_classes):
     inputs = layers.Input(shape=(100, 70))
     x = layers.Embedding(35000, 128)(inputs) 

@@ -2,11 +2,12 @@
 """
 Created on Wed Nov  4 15:01:46 2020
 
+Helper file to remove specific labels from the json dictionaries
+
 @author: Casper
 """
 import os
 import json
-from datetime import datetime as dt
     
 def load_json(path):
     try:

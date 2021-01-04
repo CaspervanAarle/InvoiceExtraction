@@ -5,10 +5,11 @@ Created on Tue Oct 20 10:53:17 2020
 @author: Casper
 """
 import numpy as np
-import custom_tokenizer
 
 # generate the input and output of a dataframe for the neural network
 def generate_io_grid(df, gridsize):
+    """ generates an input and output grid for an invoice of the CUSTOM dataset """
+    labels = ['Factuurdatum', 'Factuurnummer', 'Uitschrijver', 'Bedrag', 'Item1-naam', 'Item1-prijs', 'Item2-naam', 'Item2-prijs', 'Item3-naam', 'Item3-prijs']
     x,y = gridsize
     word_grid = [['' for _ in range(y)] for _ in range(x)] 
     o_grid = np.zeros((x,y,10))
@@ -26,55 +27,19 @@ def generate_io_grid(df, gridsize):
         word_grid[xa][ya] = row['text']
 
         # fill output truths
-        try:
-            o_grid[xa][ya][0] = int(row['Factuurdatum'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][1] = int(row['Factuurnummer'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][2] = int(row['Uitschrijver'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][3] = int(row['Bedrag'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][4] = int(row['Item1-naam'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][5] = int(row['Item1-prijs'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][6] = int(row['Item2-naam'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][7] = int(row['Item2-prijs'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][8] = int(row['Item3-naam'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][9] = int(row['Item3-prijs'])  
-        except:
-            pass
-        
-    
+        for idx, lbl in enumerate(labels):
+            try:
+                o_grid[xa][ya][idx] = int(row[lbl])
+            except:
+                pass
     o_grid = _add_dont_care(o_grid)
     return (word_grid, o_grid)
 
 
 # generate the input and output of a dataframe for the neural network
 def generate_io_grid_SROIE(df, gridsize):
-    #print(df)
+    """ generates an input and output grid for an invoice of the SROIE dataset """
+    labels = ['company', 'date', 'address', 'total']
     x,y = gridsize
     word_grid = [['' for _ in range(y)] for _ in range(x)] 
     o_grid = np.zeros((x,y,4))
@@ -92,29 +57,18 @@ def generate_io_grid_SROIE(df, gridsize):
         word_grid[xa][ya] = row['text']
 
         # fill output truths
-        try:
-            o_grid[xa][ya][0] = int(row['company'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][1] = int(row['date'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][2] = int(row['address'])
-        except:
-            pass
-        try:
-            o_grid[xa][ya][3] = int(row['total'])
-        except:
-            pass
-    
+        for idx, lbl in enumerate(labels):
+            try:
+                o_grid[xa][ya][idx] = int(row[lbl])
+            except:
+                pass
     o_grid = _add_dont_care(o_grid)
     return (word_grid, o_grid)
 
 
 # generate only the input for the neural network
 def generate_i_grid(df, gridsize):
+    """ generates only the input grid; applicable to CUSTOM and SROIE dataset"""
     x,y = gridsize
     word_grid = [['' for _ in range(y)] for _ in range(x)] 
     width = df['width'].max()
@@ -131,6 +85,7 @@ def generate_i_grid(df, gridsize):
 
 # helper function
 def _add_dont_care(array):
+    """ output field distribution must sum to 1. Add a final 'don't care' class"""
     care = 1*(array.sum(axis=2) == 1)
     dontcare = 1 - care
     dontcare = np.expand_dims(dontcare, axis=-1)

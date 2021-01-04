@@ -12,8 +12,8 @@ from custom_tokenizer import CustomEmbedder
 
 class Data():
     """ 
-    Data object
-    params:
+    Data object mainly used to generate generators for the input of our neural network
+    Args:
         directoryname:  decide which data to use: {SROIE_Exact, SROIE_Fuzzy, CUSTOM_Exact, CUSTOM_Fuzzy, CUSTOM_Exact_filtered}
         seed:           to keep train-test splits constant when recreating this Data object
         exclude_list:   decide if and which templates to exclude in the training set. example= [t1, t2]
@@ -27,6 +27,7 @@ class Data():
         self.SEED = seed
         self.TRAINTESTSPLIT = 0.9
         self.PATH = os.path.dirname(os.getcwd()) + "\\data\\preprocessed\\{}\\".format(directoryname)
+        
         input_paths = [x for x in os.listdir(self.PATH) if x.endswith('_input')]
         output_paths = [x for x in os.listdir(self.PATH) if x.endswith('_output')]
         input_paths.sort()
@@ -39,31 +40,28 @@ class Data():
             self._test_random()
         else:
             self._test_unseen(exclude_list)
+            
         print("training set length: {}".format(len(self.train)))
         print("test set length: {}".format(len(self.test)))
         
         
-    """
-        When the CUSTOM dataset is used, this function excludes some templates and those 
-        samples are used as test set.
-    """
+    # only use for CUSTOM dataset splitting
     def _test_unseen(self, exclude_list):
+        """ this function makes train test split: excludes some templates from test set """
         exclude_list2 = [x + '_' for x in exclude_list]
         self.train = [x for x in self.c if not x[0].startswith(tuple(exclude_list2))]
         random.Random(self.SEED).shuffle(self.train)
         self.test = [x for x in self.c if x[0].startswith(tuple(exclude_list2))]
         random.Random(self.SEED+1).shuffle(self.test)
         
-        
-    """
-        Works for both SROIE and CUSTOM
-    """       
     def _test_random(self):
+        """ this function makes train test split based on random seed"""
         random.Random(self.SEED).shuffle(self.c)
         self.train = self.c[:int(self.TRAINTESTSPLIT*len(self.c))]
         self.test = self.c[int(self.TRAINTESTSPLIT*len(self.c)):]
         
     def _train_data_generator_fast(self):
+        """ endless train data generator from preprocessed data """
         while(True):
             input_paths, output_paths = zip(*self.train)
             #mg = MutationGenerator().generate_mutation()
@@ -79,6 +77,7 @@ class Data():
                         
     # seen templates:
     def _validation_data_generator_fast(self):
+        """ endless validation data generator from preprocessed data """
         input_paths, output_paths = zip(*self.test)
         for inputs, outputs in zip(input_paths[:70], output_paths[:70]):
             with open(self.PATH + inputs, 'rb') as i:
@@ -89,6 +88,7 @@ class Data():
                     o.close()
                     x_ = self.embedder.get_embedding_grid_from_word(x)
                     yield (x_, y)
+                
                 
     def get_test_list(self):
         return self.test

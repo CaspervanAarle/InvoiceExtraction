@@ -22,6 +22,14 @@ import argparse
 
 # preprocess all the data in the directory and save as numpy files:
 def preprocess_data(dataset):
+    """ preprocess one of two datasets (SROIE or CUSTOM)
+    
+    multiple preprocessing folders are filled with "Exact Matching", "Fuzzy Matching" grids
+    the "Exact Filtered" folder is filled and some templates are left out because of wrong formats in the invoices
+    
+    Args:
+        dataset (str) : "SROIE" or "CUSTOM" string
+    """
     print("preprocess raw {} dataset".format(dataset))
     GRIDSIZE = [100,70]
     
@@ -36,8 +44,6 @@ def preprocess_data(dataset):
         GOAL_PATH_Exact_Filtered = os.path.dirname(os.getcwd()) + "\\data\\preprocessed\\{}_Exact_Filtered\\".format(dataset)
         data_loader = _load_raw
         grid_generator = gg.generate_io_grid
-    
-    
     
     # GENERATE NUMPY IO DATA:
     for i, (ip, op, name) in enumerate(data_loader()):
@@ -58,17 +64,17 @@ def preprocess_data(dataset):
         _save_output(in_grid2,  GOAL_PATH_Fuzzy + name + '_input')
         _save_output(out_grid2, GOAL_PATH_Fuzzy + name + '_output')
         
-        
-
-
-
-# preprocess input from specific path and return the input grid and the corresponding word grid:
 def preprocess_single_input(input_path):
+    """ preprocess input from specific path and return the input grid and the corresponding word grid """
     GRIDSIZE = [100,70]
-    img = pdf2image.convert_from_path(input_path)[0]
+    try:
+        img = pdf2image.convert_from_path(input_path)[0]
+    except:
+        print("no such path")
     df = pytesseract.image_to_data(img, output_type=Output.DATAFRAME)
     word_grid = gg.generate_i_grid(df, GRIDSIZE)
     return word_grid
+
 
 # load raw data to dataframe
 def _load_raw():
@@ -210,11 +216,13 @@ def _save_output(output, path):
         np.save(f, output)
 
 
+
+
 if __name__ == '__main__':    
-    
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dataset', help='which data to preprocess (SROIE or CUSTOM)')
     args = parser.parse_args()
+    
     if(args.dataset):
         if(args.dataset == "CUSTOM" or args.dataset == "SROIE" ):
             preprocess_data(args.dataset)

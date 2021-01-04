@@ -34,7 +34,7 @@ def learn_model(directory, seed, exclude_list=[], saved_weights_location=""):
     
     # re-use weights if provided:
     if(saved_weights_location != ""):
-        mymodel.load_weights(tf.train.latest_checkpoint("model_checkpoints\\" + directory + "\\" + saved_weights_location))
+        mymodel.load_weights(tf.train.latest_checkpoint("model_checkpoints\\" + saved_weights_location))
         
     # create metrics:
     #met = tf.keras.metrics
@@ -74,13 +74,13 @@ def is_int(s):
 if __name__ == '__main__':   
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--input', help='which preprocess data to use (name of the directory in the data/preprocessed folder')
-    parser.add_argument("-e", "--exclude_items", nargs="+", default=[], help='which templates should be excluded when using CUSTOM dataset')
-    parser.add_argument('-cp', '--checkpoint', default="", help='directory of the checkpoint to use in the model_checkpoints folder to continue learning')
+    parser.add_argument('input', help='invoice or preprocessed invoice directory ')
+    
+    parser.add_argument('-e', '--exclude_items', nargs="+", default=[], help='which templates should be excluded when using CUSTOM dataset')
+    parser.add_argument('-cp', '--checkpoint', default="", help='directory of the checkpoint to use from the model_checkpoints folder to continue learning')
     parser.add_argument('-s', '--splitseed', default=14202, help='seed to split data into train-test groups')
     args = parser.parse_args()
     
-    assert(args.input)
     assert(not (args.input.startswith("SROIE") and len(args.exclude_items)  > 0))
     assert(is_int(args.splitseed))
     

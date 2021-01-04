@@ -22,9 +22,13 @@ import settings
 import argparse
 from datetime import datetime
 
-# class used to test single predictions]
+# class used to test single predictions
 class SinglePredictor():
+    """ Class to make single predictions
     
+    Args:
+        saved_weights_location: location of the learned weights to be used for prediction
+    """
     def __init__(self, saved_weights_location):
         self.embedder = CustomEmbedder()
         try:
@@ -38,18 +42,9 @@ class SinglePredictor():
                 self.label_names = ['Factuurdatum', 'Factuurnummer', 'Uitschrijver', 'Bedrag', 'Item1-naam', 'Item1-prijs', 'Item2-naam', 'Item2-prijs', 'Item3-naam', 'Item3-prijs']
             except:
                 print("weights do not fit any model or weight directory does not exist")
-            
-            
-    def predict_from_path(self, invoice_path):
-        word_grid = preprocess_single_input(invoice_path)
-        print(type(word_grid))
-        embedding = self.embedder.get_embedding_grid_from_word(np.asarray(word_grid))
-        y = self.mymodel(np.expand_dims(embedding, 0))[0]
-        
-        print(y.shape)
-    
-            
-    def activation_to_prediction(self, invoice_path):
+                
+    def predict(self, invoice_path):
+        """ prints a prediction from the invoice in the invoice_path """
         self.stringbuild = ""
         self.stringbuild += "predict:\n"
         
@@ -65,8 +60,8 @@ class SinglePredictor():
             self.stringbuild += str(out_words) + "\n"
         print(self.stringbuild)
         
-        
     def _load_my_weights(self, saved_weights_directory): 
+        print("loading weights:")
         print(saved_weights_directory)
         self.mymodel.load_weights(tf.train.latest_checkpoint("model_checkpoints\\" + saved_weights_directory))
 
@@ -113,6 +108,7 @@ class TestPredictor():
        
         
     def predict_test_set(self):
+        """ save a prediction file with labels generated from the test set invoices """
         test_set = self.data.get_test_list()
         for file in test_set:
             self._predict_img_to_string(self.input_directory + file[0])
@@ -120,6 +116,7 @@ class TestPredictor():
         self._save_output(self.prediction_output_path)
         
     def precision_test_set(self):
+        """ print the average precision scores of all the fields generated from the test set """
         test_set = self.data.get_test_list()   
         for t in range(1): 
             for file in test_set:
@@ -128,21 +125,12 @@ class TestPredictor():
                 else:
                     self._get_precision(self.input_directory + file[0], self.labels_directory + file[0][:-6] + ".txt")
                     
+            print("predicted documents: {}".format(len(test_set)))
             print(self.softAP)
             print(self.strictAP)
-            print(sum(self.strictAP.values()))
-    
-    def check_grid_labels(self):
-        test_set = self.data.get_test_list()
-        for file in test_set:
-            self._check_grid_labels(self.input_directory + file[0], self.labels_directory + file[0][:-6] +"_json.json")
-    
-    
-    def _get_detection_rate(self, x_words, y_true, json, json_lbls):
-        detection = custom_metrics.discovery_rate(x_words, y_true, json, json_lbls)
-        self.detectionrate = dict(Counter(self.detectionrate), Counter(detection))
         
         
+    # helper functions:
         
     def _predict_img_to_string(self, input_path):
         self.stringbuild += "------------------\n"
@@ -159,9 +147,6 @@ class TestPredictor():
             out_words = np.where(channel > self.threshold, word_input, '').flatten()
             out_words = ' '.join(out_words).split()
             self.stringbuild += str(out_words) + "\n"
-            
-            
-            
             
     # string outputs        
     def _get_precision(self, input_path, json_path): 
@@ -184,8 +169,6 @@ class TestPredictor():
         out_real = np.rollaxis(output, -1, 0)
         
         # predict for every channel
-        #print("------------")
-        #print("ground truth: ")
         for i, channel in enumerate(out[:-1]):
             # do prediction:
             out_words = np.where(channel > self.threshold, word_input, '').flatten()
@@ -193,7 +176,6 @@ class TestPredictor():
             out_words = list(set(out_words))
             label_words = str(json_label[self.label_names[i]]).split()
             label_words = [x for x in label_words if x != 'nan']
-            #print(label_words)
             result_softap =  all(self._elem_in_list(elem, out_words)  for elem in label_words)
             self.softAP[self.label_names[i]] += result_softap
             
@@ -201,59 +183,22 @@ class TestPredictor():
             result_strictap = result_softap and part_result
             self.strictAP[self.label_names[i]] += result_strictap
         
-        #print("grid labels: ")
         for i, channel in enumerate(out_real[:-1]):
             out_words = np.where(channel > self.threshold, word_input, '').flatten()            
             out_words = ' '.join(out_words).split()
             out_words = list(set(out_words))
-            #print(out_words)
-            
-    # string outputs            
-    def _check_grid_labels(self, input_path, json_path):
-        #open json output
-        json_label = self._load_json(json_path)
-        
-        # open grid output
-        with open(input_path[:-6] + "_output", 'rb') as i:
-            output = np.load(i)
-            i.close()
-            
-        # open word input
-        with open(input_path, 'rb') as i:
-            word_input = np.load(i)
-            i.close()
-            
-        # generate output
-        out_real = np.rollaxis(output, -1, 0)
-    
-        print("------------")
-        print("ground truth: ")
-        for i, channel in enumerate(out_real[:-1]):
-            label_words = str(json_label[self.label_names[i]]).split()
-            label_words = [x for x in label_words if x != 'nan']
-            print(label_words)
-        
-        print("grid labels: ")
-        for i, channel in enumerate(out_real[:-1]):
-            out_words = np.where(channel > self.threshold, word_input, '').flatten()            
-            out_words = ' '.join(out_words).split()
-            out_words = list(set(out_words))
-            print(out_words)
-            
-            
+
     def _elem_in_list(self, elem, alist):
         for out in alist:
             if(fuzz.ratio(elem, out) > 80):
                 return True
         return False
-            
-    
+          
     def _print_labels(self, input_path):
         self.stringbuild += "true:\n"
         json_label = self._load_json(input_path)
         self.stringbuild += json.dumps(json_label) + "\n"
-        
-            
+         
     def _load_json(self, path):
         try:
             string = open(path, 'r').read()
@@ -261,7 +206,6 @@ class TestPredictor():
             print("json not found")
             pass
         return json.loads(string)
-
 
     def _save_output(self, path):
         file = open(path, "wb") 
@@ -292,7 +236,7 @@ if __name__ == '__main__':
     if(os.path.isfile(args.input)):
         assert(args.checkpoint)
         predictor = SinglePredictor(args.checkpoint)
-        predictor.activation_to_prediction(args.input)
+        predictor.predict(args.input)
         
         
         
